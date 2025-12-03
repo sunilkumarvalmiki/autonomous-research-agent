@@ -323,8 +323,6 @@ class DataScraper:
             results['news'].extend(self.hackernews.get_top_stories(query, max_results=limit['news'] // 3))
             results['news'].extend(self.devto.search(query, max_results=limit['news'] // 3))
             results['news'].extend(self.rss.scrape(query, max_results=limit['news'] // 3))
-        
-        if focus in ['trends', 'all']:
             results['discussions'] = self.reddit.search(query, max_results=limit['news'])
         
         return results

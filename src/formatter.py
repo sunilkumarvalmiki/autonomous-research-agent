@@ -298,8 +298,12 @@ class BibTeXFormatter:
         entries = []
         
         for i, paper in enumerate(data.get('papers', []), 1):
-            # Extract arXiv ID from link
-            arxiv_id = paper.get('link', '').split('/')[-1] if paper.get('link') else f"unknown{i}"
+            # Extract arXiv ID from link with validation
+            link = paper.get('link', '')
+            if link and '/' in link:
+                arxiv_id = link.split('/')[-1]
+            else:
+                arxiv_id = f"unknown{i}"
             
             entry = f"""@article{{{arxiv_id},
     title = {{{paper.get('title', 'Unknown')}}},
