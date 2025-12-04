@@ -1,0 +1,177 @@
+name: GitHub Lifecycle Manager
+
+on:
+  # Run on schedule (daily)
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+  
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Operation to perform'
+        required: false
+        type: choice
+        options:
+          - auto_merge_ready_prs
+          - cleanup_merged_branches
+          - auto_label_issues
+          - enforce_branch_protections
+          - create_release
+          - all
+        default: 'all'
+  
+  # Trigger on PR events
+  pull_request:
+    types: [opened, synchronize, reopened]
+  
+  # Trigger on issue events
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+jobs:
+  lifecycle-operations:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+      
+      - name: Auto-merge ready PRs
+        if: |
+          github.event_name == 'schedule' || 
+          github.event_name == 'workflow_dispatch' && (github.event.inputs.operation == 'auto_merge_ready_prs' || github.event.inputs.operation == 'all') ||
+          github.event_name == 'pull_request'
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python -c "
+          from src.github_lifecycle import get_lifecycle_manager
+          import os
+          
+          manager = get_lifecycle_manager()
+          prs = manager.list_pull_requests()
+          
+          merged_count = 0
+          for pr in prs:
+              try:
+                  if manager.auto_merge_if_ready(pr['number']):
+                      merged_count += 1
+              except Exception as e:
+                  print(f'Could not auto-merge PR #{pr[\"number\"]}: {e}')
+          
+          print(f'Auto-merged {merged_count} PRs')
+          "
+      
+      - name: Cleanup merged branches
+        if: |
+          github.event_name == 'schedule' ||
+          github.event_name == 'workflow_dispatch' && (github.event.inputs.operation == 'cleanup_merged_branches' || github.event.inputs.operation == 'all')
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python -c "
+          from src.github_lifecycle import get_lifecycle_manager
+          
+          manager = get_lifecycle_manager()
+          deleted = manager.cleanup_merged_branches()
+          
+          print(f'Deleted {len(deleted)} merged branches: {deleted}')
+          "
+      
+      - name: Auto-label issues
+        if: |
+          github.event_name == 'issues' && github.event.action == 'opened' ||
+          github.event_name == 'workflow_dispatch' && (github.event.inputs.operation == 'auto_label_issues' || github.event.inputs.operation == 'all')
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python -c "
+          from src.github_lifecycle import get_lifecycle_manager
+          import os
+          
+          manager = get_lifecycle_manager()
+          
+          # Auto-label the issue that triggered this or all open issues
+          issue_number = os.getenv('ISSUE_NUMBER')
+          if issue_number:
+              labels = manager.auto_label_issue(int(issue_number))
+              print(f'Auto-labeled issue #{issue_number} with: {labels}')
+          else:
+              # Label all open issues
+              issues = manager.list_issues()
+              for issue in issues:
+                  try:
+                      labels = manager.auto_label_issue(issue['number'])
+                      print(f'Auto-labeled issue #{issue[\"number\"]} with: {labels}')
+                  except Exception as e:
+                      print(f'Could not label issue #{issue[\"number\"]}: {e}')
+          "
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+      
+      - name: Enforce branch protections
+        if: |
+          github.event_name == 'schedule' ||
+          github.event_name == 'workflow_dispatch' && (github.event.inputs.operation == 'enforce_branch_protections' || github.event.inputs.operation == 'all')
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python -c "
+          from src.github_lifecycle import get_lifecycle_manager
+          
+          manager = get_lifecycle_manager()
+          results = manager.enforce_branch_protections()
+          
+          print(f'Branch protection enforcement results: {results}')
+          "
+      
+      - name: Create semantic release
+        if: |
+          github.event_name == 'workflow_dispatch' && github.event.inputs.operation == 'create_release'
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python -c "
+          from src.github_lifecycle import get_lifecycle_manager
+          
+          manager = get_lifecycle_manager()
+          release = manager.create_semantic_release(version_bump='patch')
+          
+          if release:
+              print(f'Created release: {release[\"tag_name\"]}')
+              print(f'URL: {release[\"html_url\"]}')
+          else:
+              print('Failed to create release')
+          "
+      
+      - name: Summary
+        run: |
+          echo "## GitHub Lifecycle Management Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Lifecycle operations completed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY

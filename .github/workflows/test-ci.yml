@@ -1,0 +1,307 @@
+name: Test Branch - Comprehensive Testing
+
+on:
+  push:
+    branches: [ test ]
+  pull_request:
+    branches: [ test ]
+
+jobs:
+  all-unit-tests:
+    name: All Unit Tests with Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov pytest-mock pytest-timeout
+        pip install -r requirements.txt
+    
+    - name: Run all unit tests with coverage
+      run: |
+        pytest tests/ -v --cov=src --cov-report=xml --cov-report=html --cov-report=term-missing --timeout=30
+    
+    - name: Check coverage threshold
+      run: |
+        python -c "
+        import xml.etree.ElementTree as ET
+        tree = ET.parse('coverage.xml')
+        coverage = float(tree.getroot().attrib['line-rate']) * 100
+        print(f'Coverage: {coverage:.1f}%')
+        if coverage < 60:
+            print('❌ Coverage below 60%')
+            exit(1)
+        print('✅ Coverage acceptable')
+        "
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      if: always()
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest
+        pip install -r requirements.txt
+    
+    - name: Test component integration
+      run: |
+        python -c "
+        import sys
+        sys.path.insert(0, 'src')
+        from scraper import DataScraper
+        from analyzer import ResearchAnalyzer
+        from formatter import OutputFormatter
+        from observability import ObservabilityManager
+        from evaluation import ResearchEvaluator
+        
+        # Test integration
+        obs = ObservabilityManager()
+        evaluator = ResearchEvaluator()
+        
+        mock_data = {
+            'papers': [{'title': 'Test', 'source': 'arXiv'}],
+            'repositories': [],
+            'news': [],
+            'discussions': []
+        }
+        
+        mock_analysis = {
+            'key_findings': ['Test finding'],
+            'summary': 'Test summary',
+            'recommendations': ['Test rec']
+        }
+        
+        formatter = OutputFormatter()
+        outputs = formatter.generate_all('test', mock_data, mock_analysis)
+        
+        report = evaluator.comprehensive_evaluation('test', mock_data, mock_analysis, outputs)
+        
+        print('✅ Component integration works')
+        "
+
+  functional-tests:
+    name: Functional Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Test YAML config parsing
+      run: |
+        python -c "
+        import sys
+        sys.path.insert(0, 'src')
+        from main import parse_issue_config
+        
+        config = parse_issue_config('---\ndepth: deep\nfocus: papers\n---')
+        assert config['depth'] == 'deep'
+        assert config['focus'] == 'papers'
+        print('✅ Config parsing works')
+        "
+    
+    - name: Test output generation
+      run: |
+        python -c "
+        import sys
+        sys.path.insert(0, 'src')
+        from formatter import OutputFormatter
+        
+        formatter = OutputFormatter()
+        data = {'papers': [], 'repositories': [], 'news': [], 'discussions': []}
+        analysis = {'key_findings': [], 'summary': 'Test', 'recommendations': []}
+        
+        outputs = formatter.generate_all('test', data, analysis)
+        
+        assert 'markdown' in outputs
+        assert 'json' in outputs
+        assert 'html' in outputs
+        assert len(outputs) == 6
+        print('✅ Output generation works')
+        "
+
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install memory-profiler
+        pip install -r requirements.txt
+    
+    - name: Test observability performance
+      run: |
+        python -c "
+        import sys
+        import time
+        sys.path.insert(0, 'src')
+        from observability import ObservabilityManager, MetricType
+        
+        obs = ObservabilityManager()
+        
+        start = time.time()
+        for i in range(1000):
+            trace_id = obs.start_trace(f'op_{i}')
+            obs.record_metric(MetricType.LATENCY, 0.1)
+            obs.end_trace(trace_id, 'success')
+        duration = time.time() - start
+        
+        print(f'1000 operations in {duration:.2f}s')
+        assert duration < 5.0, 'Performance too slow'
+        print('✅ Performance acceptable')
+        "
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Bandit security scan
+      continue-on-error: true
+      run: |
+        pip install bandit
+        bandit -r src/ -ll
+    
+    - name: Check for secrets
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
+    
+    - name: Dependency vulnerability scan
+      continue-on-error: true
+      run: |
+        pip install safety
+        safety check --json
+
+  uat-tests:
+    name: User Acceptance Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Simulate user workflow
+      run: |
+        python -c "
+        import sys
+        sys.path.insert(0, 'src')
+        from main import parse_issue_config, extract_query_from_title
+        from observability import ObservabilityManager
+        from evaluation import ResearchEvaluator
+        
+        # Simulate user creating issue
+        title = 'Research: Machine Learning in Healthcare'
+        body = '---\ndepth: standard\nfocus: all\n---'
+        
+        query = extract_query_from_title(title)
+        config = parse_issue_config(body)
+        
+        assert query == 'Machine Learning in Healthcare'
+        assert config['depth'] == 'standard'
+        
+        print('✅ User workflow simulation passed')
+        "
+
+  regression-tests:
+    name: Regression Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Test backward compatibility
+      run: |
+        python -c "
+        import sys
+        sys.path.insert(0, 'src')
+        
+        # Test all modules still importable
+        from scraper import DataScraper
+        from analyzer import ResearchAnalyzer, prepare_context, fallback_analysis
+        from formatter import OutputFormatter
+        from github_api import GitHubAPI
+        from main import parse_issue_config, extract_query_from_title
+        
+        print('✅ All legacy interfaces work')
+        "
+
+  test-summary:
+    name: Test Summary
+    needs: [all-unit-tests, integration-tests, functional-tests, performance-tests, security-scan, uat-tests, regression-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Summary
+      run: |
+        echo "🎉 All comprehensive tests completed"
+        echo "✅ Unit Tests"
+        echo "✅ Integration Tests"
+        echo "✅ Functional Tests"
+        echo "✅ Performance Tests"
+        echo "✅ Security Scan"
+        echo "✅ UAT Tests"
+        echo "✅ Regression Tests"

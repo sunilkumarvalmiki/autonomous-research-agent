@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Research Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .hero p {
+            font-size: 1.3em;
+            opacity: 0.95;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .content {
+            padding: 60px 40px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+        
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .feature-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.7;
+        }
+        
+        .feature-card ul {
+            list-style: none;
+            margin-top: 15px;
+        }
+        
+        .feature-card li {
+            padding: 8px 0;
+            color: #555;
+        }
+        
+        .feature-card li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+            margin-top: 40px;
+            border-radius: 15px;
+        }
+        
+        .cta-section h2 {
+            font-size: 2.2em;
+            margin-bottom: 20px;
+        }
+        
+        .cta-section p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .code-example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 30px 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        
+        .code-example .comment {
+            color: #75715e;
+        }
+        
+        .code-example .keyword {
+            color: #f92672;
+        }
+        
+        .code-example .string {
+            color: #e6db74;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            color: #666;
+        }
+        
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>🔬 Autonomous Research Agent</h1>
+            <p>Fully automated research powered by GitHub Actions, free LLMs, and multiple data sources</p>
+        </div>
+        
+        <div class="content">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #333;">No Installation Required - Runs 100% on GitHub</h2>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📚</div>
+                    <h3>Multi-Source Data Collection</h3>
+                    <p>Automatically gathers research from:</p>
+                    <ul>
+                        <li>arXiv academic papers</li>
+                        <li>GitHub trending repos</li>
+                        <li>HackerNews discussions</li>
+                        <li>Reddit communities</li>
+                        <li>Dev.to articles</li>
+                        <li>RSS tech blogs</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI-Powered Analysis</h3>
+                    <p>Free LLM integration with:</p>
+                    <ul>
+                        <li>Groq (Llama 3.3 70B)</li>
+                        <li>HuggingFace API</li>
+                        <li>Google Gemini</li>
+                        <li>Smart fallback system</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Rich Output Formats</h3>
+                    <p>Generates comprehensive reports:</p>
+                    <ul>
+                        <li>Markdown reports</li>
+                        <li>JSON structured data</li>
+                        <li>Interactive HTML dashboard</li>
+                        <li>BibTeX citations</li>
+                        <li>CSV for analysis</li>
+                        <li>Mermaid knowledge graphs</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Issue-Triggered Workflow</h3>
+                    <p>Simple activation process:</p>
+                    <ul>
+                        <li>Create GitHub issue</li>
+                        <li>Add "research" label</li>
+                        <li>Agent runs automatically</li>
+                        <li>Results posted to issue</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3>GitHub Pages Integration</h3>
+                    <p>Beautiful visualizations:</p>
+                    <ul>
+                        <li>Auto-deployed dashboards</li>
+                        <li>Interactive charts</li>
+                        <li>Knowledge graphs</li>
+                        <li>Mobile responsive</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>Configurable Research</h3>
+                    <p>YAML front matter options:</p>
+                    <ul>
+                        <li>depth: quick/standard/deep</li>
+                        <li>focus: papers/tools/trends</li>
+                        <li>time_range: week/month/year</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="cta-section">
+                <h2>Get Started in 2 Minutes</h2>
+                <p>Just add your API keys to GitHub Secrets and create an issue!</p>
+                
+                <div class="code-example">
+<span class="comment"># 1. Add secrets to your GitHub repository:</span>
+GROQ_API_KEY       <span class="comment"># Get from https://console.groq.com</span>
+GEMINI_API_KEY     <span class="comment"># Get from https://makersuite.google.com/app/apikey</span>
+HUGGINGFACE_API_KEY <span class="comment"># Get from https://huggingface.co/settings/tokens</span>
+
+<span class="comment"># 2. Create an issue with label "research":</span>
+<span class="keyword">Title:</span> <span class="string">Research: Machine Learning in Healthcare</span>
+
+<span class="comment"># 3. Optional YAML configuration in issue body:</span>
+---
+depth: deep
+focus: papers
+time_range: month
+---
+
+<span class="comment"># 4. Agent runs automatically and posts results! ✨</span>
+                </div>
+                
+                <a id="cta-button" href="#" class="cta-button">View on GitHub</a>
+            </div>
+            
+            <div style="margin-top: 50px;">
+                <h2 style="color: #333; margin-bottom: 20px;">How It Works</h2>
+                <div class="feature-card">
+                    <ol style="list-style-position: inside; color: #555;">
+                        <li style="padding: 12px 0; border-bottom: 1px solid #eee;">
+                            <strong>User creates issue</strong> with label "research" and topic
+                        </li>
+                        <li style="padding: 12px 0; border-bottom: 1px solid #eee;">
+                            <strong>GitHub Action triggers</strong> automatically on issue creation/labeling
+                        </li>
+                        <li style="padding: 12px 0; border-bottom: 1px solid #eee;">
+                            <strong>Agent scrapes</strong> arXiv, GitHub, HackerNews, Reddit, Dev.to, RSS feeds
+                        </li>
+                        <li style="padding: 12px 0; border-bottom: 1px solid #eee;">
+                            <strong>LLM synthesizes</strong> findings using Groq/Gemini/HuggingFace
+                        </li>
+                        <li style="padding: 12px 0; border-bottom: 1px solid #eee;">
+                            <strong>Generates outputs</strong> in Markdown, JSON, HTML, BibTeX, CSV, Mermaid
+                        </li>
+                        <li style="padding: 12px 0; border-bottom: 1px solid #eee;">
+                            <strong>Posts summary</strong> to issue comment with key findings
+                        </li>
+                        <li style="padding: 12px 0; border-bottom: 1px solid #eee;">
+                            <strong>Uploads artifacts</strong> for download (90-day retention)
+                        </li>
+                        <li style="padding: 12px 0;">
+                            <strong>Deploys dashboard</strong> to GitHub Pages for visualization
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Built with ❤️ using Python, GitHub Actions, and Free LLM APIs</p>
+            <p style="margin-top: 10px;">
+                <a id="github-link" href="#">GitHub</a> • 
+                <a id="github-issue-link" href="#">Try It Now</a>
+            </p>
+        </div>
+    </div>
+    <script>
+        // Dynamically set GitHub links based on query params (with defaults)
+        (function() {
+            function getQueryParam(name, defaultValue) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(name) || defaultValue;
+            }
+            var owner = getQueryParam('owner', 'sunilkumarvalmiki');
+            var repo = getQueryParam('repo', 'autonomous-research-agent');
+            var githubUrl = 'https://github.com/' + owner + '/' + repo;
+            var issueUrl = githubUrl + '/issues/new?labels=research';
+            document.getElementById('github-link').setAttribute('href', githubUrl);
+            document.getElementById('github-issue-link').setAttribute('href', issueUrl);
+            document.getElementById('cta-button').setAttribute('href', githubUrl);
+        })();
+    </script>
+</body>
+</html>

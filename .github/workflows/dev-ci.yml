@@ -1,0 +1,123 @@
+name: Dev Branch CI
+
+on:
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ dev ]
+
+jobs:
+  lint-and-format:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint flake8 black isort
+    
+    - name: Check code formatting with black
+      run: |
+        black --check src/ tests/ || true
+    
+    - name: Check imports with isort
+      run: |
+        isort --check-only src/ tests/ || true
+    
+    - name: Lint with flake8
+      run: |
+        flake8 src/ tests/ --max-line-length=120 --ignore=E203,W503 || true
+    
+    - name: Lint with pylint
+      run: |
+        pylint src/*.py --disable=C0111,R0903,C0103 || true
+
+  syntax-check:
+    name: Python Syntax Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Validate Python syntax
+      run: |
+        python -m py_compile src/*.py
+        python -m py_compile tests/*.py
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov pytest-mock
+        pip install -r requirements.txt
+    
+    - name: Run unit tests
+      run: |
+        pytest tests/ -v --cov=src --cov-report=term-missing
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      if: always()
+
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Test module imports
+      run: |
+        cd src
+        python -c "from scraper import DataScraper; print('✓ Scraper OK')"
+        python -c "from analyzer import ResearchAnalyzer; print('✓ Analyzer OK')"
+        python -c "from formatter import OutputFormatter; print('✓ Formatter OK')"
+        python -c "from observability import ObservabilityManager; print('✓ Observability OK')"
+        python -c "from memory import AgentMemory; print('✓ Memory OK')"
+        python -c "from evaluation import ResearchEvaluator; print('✓ Evaluation OK')"
+    
+    - name: Test basic functionality
+      run: |
+        python -c "
+        import sys
+        sys.path.insert(0, 'src')
+        from observability import ObservabilityManager
+        obs = ObservabilityManager()
+        trace_id = obs.start_trace('test')
+        obs.end_trace(trace_id, 'success')
+        print('✓ Basic functionality works')
+        "

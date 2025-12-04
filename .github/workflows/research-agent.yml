@@ -1,0 +1,81 @@
+name: Autonomous Research Agent
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  research:
+    # Only run when issue has 'research' label
+    if: contains(github.event.issue.labels.*.name, 'research')
+    runs-on: ubuntu-latest
+    
+    permissions:
+      issues: write
+      contents: write
+      pages: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Extract query from issue title
+        id: extract_query
+        run: |
+          TITLE="${{ github.event.issue.title }}"
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+      
+      - name: Run research agent
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python src/main.py \
+            --query "${{ steps.extract_query.outputs.title }}" \
+            --issue-body "${{ github.event.issue.body }}" \
+            --repo "${{ github.repository }}" \
+            --issue-number ${{ github.event.issue.number }} \
+            --output-dir ./outputs
+      
+      - name: Upload research artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: research-report-${{ github.event.issue.number }}
+          path: outputs/
+          retention-days: 90
+      
+      - name: Deploy to GitHub Pages
+        if: success()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          destination_dir: research-${{ github.event.issue.number }}
+          enable_jekyll: false
+      
+      - name: Post GitHub Pages link
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `📊 **Interactive Dashboard Available**\n\nView the research dashboard at: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/research-${{ github.event.issue.number }}/`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
