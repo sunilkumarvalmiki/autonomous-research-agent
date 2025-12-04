@@ -27,6 +27,14 @@ A **production-grade**, fully autonomous research agent that runs entirely on Gi
 
 **NEW! The agent now includes enterprise-ready capabilities:**
 
+### 🤖 GitHub Lifecycle Management (NEW!)
+- **PR Automation**: Auto-merge ready PRs, branch cleanup
+- **Issue Management**: Smart auto-labeling, auto-assignment, auto-closure
+- **Branch Operations**: Auto-creation, protection enforcement
+- **Release Management**: Semantic versioning, automated changelogs
+- **Workflow Orchestration**: Cross-workflow triggers, status monitoring
+- **Fully Autonomous**: Manages entire GitHub lifecycle 24/7
+
 ### 📊 Observability & Monitoring
 - Complete performance tracking and metrics
 - Trace every operation with start/end times
@@ -76,8 +84,11 @@ Go to your repository **Settings → Secrets and variables → Actions** and add
 | `GROQ_API_KEY` | Groq API key (recommended) | [console.groq.com](https://console.groq.com) |
 | `GEMINI_API_KEY` | Google Gemini API key | [makersuite.google.com](https://makersuite.google.com/app/apikey) |
 | `HUGGINGFACE_API_KEY` | HuggingFace token (optional) | [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) |
+| `GITHUB_PAT` | Personal Access Token (for lifecycle management) | [GitHub Settings → Developer settings → PAT](https://github.com/settings/tokens) |
 
-**Note**: You only need ONE of these API keys for the agent to work. Groq is recommended for best results.
+**Note**: 
+- You only need ONE of the LLM API keys for research to work. Groq is recommended for best results.
+- `GITHUB_PAT` is **optional** but enables advanced lifecycle management (auto-merge PRs, branch protection, releases, etc.). Requires `repo`, `workflow`, and `admin:org` (if applicable) scopes.
 
 ### 3. Enable GitHub Pages (Optional)
 
@@ -162,18 +173,41 @@ All outputs are available as downloadable artifacts:
 ```
 autonomous-research-agent/
 ├── .github/
-│   └── workflows/
-│       └── research-agent.yml    # GitHub Actions workflow
+│   ├── workflows/
+│   │   ├── research-agent.yml      # Main research workflow
+│   │   ├── lifecycle-manager.yml   # GitHub lifecycle automation
+│   │   ├── dev-ci.yml              # Development CI
+│   │   ├── test-ci.yml             # Comprehensive testing
+│   │   └── prod-deploy.yml         # Production deployment
+│   └── ISSUE_TEMPLATE/
+│       └── research-request.md     # Issue template
 ├── src/
-│   ├── main.py                   # Orchestrator
-│   ├── scraper.py                # Data collection
-│   ├── analyzer.py               # LLM integration
-│   ├── formatter.py              # Output generation
-│   └── github_api.py             # GitHub API client
+│   ├── main.py                     # Orchestrator
+│   ├── scraper.py                  # Data collection
+│   ├── analyzer.py                 # LLM integration
+│   ├── formatter.py                # Output generation
+│   ├── github_api.py               # GitHub API client
+│   ├── github_lifecycle.py         # Lifecycle management (NEW!)
+│   ├── observability.py            # Monitoring & metrics
+│   ├── memory.py                   # Semantic memory
+│   └── evaluation.py               # Quality evaluation
 ├── docs/
-│   └── index.html                # GitHub Pages template
-├── requirements.txt              # Python dependencies
-└── README.md                     # This file
+│   ├── index.html                  # GitHub Pages template
+│   ├── PRODUCTION_FEATURES.md      # Production features guide
+│   ├── ARCHITECTURE.md             # System architecture
+│   ├── ROADMAP.md                  # Development roadmap
+│   ├── BRANCHING_STRATEGY.md       # Branch strategy guide
+│   ├── TESTING_GUIDE.md            # Testing documentation
+│   └── GITHUB_LIFECYCLE.md         # Lifecycle management docs (NEW!)
+├── tests/
+│   ├── test_scraper.py             # Scraper tests
+│   ├── test_observability.py       # Observability tests
+│   └── test_evaluation.py          # Evaluation tests
+├── scripts/
+│   └── setup-branches.sh           # Branch setup script
+├── requirements.txt                # Python dependencies
+├── pytest.ini                      # Pytest configuration
+└── README.md                       # This file
 ```
 
 ## 🔧 Local Development
@@ -187,12 +221,29 @@ pip install -r requirements.txt
 # Set environment variables
 export GROQ_API_KEY="your-key-here"
 export GITHUB_TOKEN="your-token-here"
+export GITHUB_PAT="your-pat-here"  # Optional, for lifecycle management
 
 # Run the agent
 python src/main.py \
   --query "Machine Learning" \
   --output-dir ./outputs
+
+# Test lifecycle management
+python -c "
+from src.github_lifecycle import get_lifecycle_manager
+manager = get_lifecycle_manager()
+print(manager.list_pull_requests())
+"
 ```
+
+## 📚 Documentation
+
+- **[Production Features Guide](docs/PRODUCTION_FEATURES.md)** - Complete guide to observability, memory, and evaluation
+- **[System Architecture](docs/ARCHITECTURE.md)** - Architecture overview and design patterns
+- **[Development Roadmap](docs/ROADMAP.md)** - Future enhancements and phases
+- **[Branching Strategy](docs/BRANCHING_STRATEGY.md)** - 3-branch strategy (dev→test→main)
+- **[Testing Guide](docs/TESTING_GUIDE.md)** - 10 test types and how to run them
+- **[GitHub Lifecycle Management](docs/GITHUB_LIFECYCLE.md)** - Complete lifecycle automation guide (NEW!)
 
 ## 🤝 Contributing
 
