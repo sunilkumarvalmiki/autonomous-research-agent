@@ -74,6 +74,35 @@ dev (development)
 
 ## Testing Strategy
 
+### Quality Gates by Stage ✨ NEW
+
+Each branch stage enforces specific quality requirements:
+
+#### `dev` Branch Quality Gates
+- ✅ Code formatting (Black, isort)
+- ✅ Basic linting (Flake8)
+- ✅ Type checking (MyPy)
+- ✅ Security scanning (Bandit, Safety)
+- ✅ Unit tests
+- ✅ Package build validation
+- 🔄 All checks continue-on-error for rapid iteration
+
+#### `test` Branch Quality Gates
+- ✅ All dev branch checks (enforced)
+- ✅ Multi-version Python testing (3.10, 3.11, 3.12)
+- ✅ Integration tests
+- ✅ Functional tests
+- ✅ Performance tests
+- ✅ Docker build validation
+- 🔒 Checks may block merge
+
+#### `main` Branch Quality Gates
+- ✅ All test branch checks (enforced)
+- ✅ Final smoke tests
+- ✅ Production deployment validation
+- ✅ Automated release creation
+- 🔒 All checks must pass
+
 ### Tests on `dev` Branch
 
 **Quick Validation:**
@@ -198,6 +227,76 @@ jobs:
   - deploy-production
   - health-check
   - monitor
+```
+
+#### 4. `quality-gates.yml` - Comprehensive Quality Checks ✨ NEW
+```yaml
+triggers:
+  - PR to main/test/dev
+  - push to main/test/dev
+
+jobs:
+  - code-quality (Black, isort, Flake8, MyPy)
+  - security-scan (Bandit, Safety)
+  - multi-version-tests (Python 3.10, 3.11, 3.12)
+  - build-validation (package + Docker)
+  - quality-summary
+
+features:
+  - Runs on all PRs and pushes
+  - Multi-version Python testing
+  - Security scanning
+  - Non-blocking for rapid iteration
+```
+
+#### 5. `branch-cleanup.yml` - Automated Branch Cleanup ✨ NEW
+```yaml
+triggers:
+  - PR closed (merged) to main/test/dev
+
+jobs:
+  - Auto-delete merged branches (except main/test/dev)
+  - Close remaining open PRs from deleted branch
+  - Generate cleanup summary
+
+features:
+  - Keeps repository clean
+  - Prevents stale branches
+  - Automated PR closure
+```
+
+#### 6. `promote-branches.yml` - Automated Promotions ✨ NEW
+```yaml
+triggers:
+  - Manual workflow dispatch
+  - Scheduled (6 AM UTC, weekdays)
+
+jobs:
+  - Promote dev → test
+  - Promote test → main
+  - Full promotion (dev → test → main)
+
+features:
+  - Auto-creates promotion PRs
+  - Checks for changes before PR creation
+  - Prevents duplicate PRs
+  - Includes commit summary
+```
+
+#### 7. `release.yml` - Automated Release Creation ✨ NEW
+```yaml
+triggers:
+  - push to main
+
+jobs:
+  - Create version tag
+  - Generate release notes
+  - Create GitHub release
+
+features:
+  - Categorizes commits (features, fixes, chores)
+  - Auto-generates changelog
+  - Links to full changelog
 ```
 
 ## Branch Protection Configuration
@@ -357,6 +456,47 @@ git merge test
 - [ ] Rollback plan ready
 - [ ] Monitoring configured
 
+## Automated Branch Management ✨ NEW
+
+### Auto-Cleanup Features
+
+When a PR is merged to `main`, `test`, or `dev`:
+
+1. **Branch Deletion** 🗑️
+   - Merged feature/bugfix branches are automatically deleted
+   - Protected branches (main, test, dev) are never deleted
+   - Keeps repository clean and organized
+
+2. **PR Closure** 🔒
+   - Any remaining open PRs from the deleted branch are closed
+   - Auto-comment explains why PR was closed
+   - Prevents orphaned PRs
+
+3. **Cleanup Summary** 📊
+   - GitHub Actions summary shows what was cleaned up
+   - Tracks deleted branches and closed PRs
+   - Maintains audit trail
+
+### Automated Promotions
+
+#### Scheduled Promotions
+- Runs daily at 6 AM UTC (weekdays only)
+- Automatically creates `dev → test` PR if changes exist
+- Prevents duplicate PRs
+- Includes commit summary in PR description
+
+#### Manual Promotions
+Available promotion types:
+- `dev-to-test`: Promote development to testing
+- `test-to-main`: Promote testing to production
+- `full-promotion`: Complete pipeline (dev → test → main)
+
+#### Smart PR Creation
+- Checks for existing changes before creating PR
+- Skips if no commits to promote
+- Prevents duplicate promotion PRs
+- Lists all commits in PR description
+
 ## Monitoring and Alerts
 
 ### Development (dev)
@@ -412,6 +552,58 @@ git checkout dev
 # Follow dev → test → main flow
 ```
 
+## Local Development Setup ✨ NEW
+
+### Pre-commit Hooks
+
+Install pre-commit hooks for automatic code quality checks:
+
+```bash
+# Install development dependencies
+pip install -r requirements-dev.txt
+
+# Install pre-commit hooks
+pre-commit install
+
+# Run hooks manually on all files
+pre-commit run --all-files
+```
+
+### Hooks Included:
+- ✅ Trailing whitespace removal
+- ✅ End of file fixer
+- ✅ YAML/JSON syntax validation
+- ✅ Merge conflict detection
+- ✅ Large file detection
+- ✅ Black formatting
+- ✅ isort import sorting
+- ✅ Flake8 linting
+- ✅ Bandit security scanning
+
+### Development Dependencies
+
+Install all development tools:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Includes:
+- Testing: pytest, pytest-cov, pytest-xdist
+- Linting: flake8, black, isort, mypy, pylint
+- Security: bandit, safety
+- Build: build, wheel, setuptools
+- Documentation: sphinx
+
+### Tool Configuration
+
+All tools are configured in `pyproject.toml`:
+- Black: line length 100, Python 3.10+
+- isort: black-compatible profile
+- MyPy: strict type checking
+- Pytest: coverage reporting enabled
+- Bandit: security scanning with exclusions
+
 ## Summary
 
 This 3-branch strategy ensures:
@@ -421,5 +613,9 @@ This 3-branch strategy ensures:
 - 🔒 Protected branches
 - 📊 Quality gates
 - 🔄 Smooth deployments
+- 🧹 Automated cleanup ✨ NEW
+- 🤖 Automated promotions ✨ NEW
+- 🔐 Security scanning ✨ NEW
+- 📦 Automated releases ✨ NEW
 
 The flow dev → test → main ensures every change is thoroughly validated before reaching production.

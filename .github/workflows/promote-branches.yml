@@ -1,0 +1,180 @@
+name: Branch Promotion
+
+on:
+  # Manual trigger with options
+  workflow_dispatch:
+    inputs:
+      promotion_type:
+        description: 'Promotion type'
+        required: true
+        type: choice
+        options:
+          - dev-to-test
+          - test-to-main
+          - full-promotion
+        default: 'dev-to-test'
+  
+  # Scheduled daily at 6 AM UTC on weekdays (Monday-Friday)
+  schedule:
+    - cron: '0 6 * * 1-5'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-and-promote:
+    name: Check and promote branches
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Determine promotion type
+        id: promotion
+        run: |
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            echo "type=dev-to-test" >> $GITHUB_OUTPUT
+          else
+            echo "type=${{ github.event.inputs.promotion_type }}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Promote dev to test
+        if: steps.promotion.outputs.type == 'dev-to-test' || steps.promotion.outputs.type == 'full-promotion'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Check if there are changes between dev and test
+            const { data: comparison } = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: 'test',
+              head: 'dev'
+            });
+            
+            if (comparison.ahead_by === 0) {
+              core.info('No changes between dev and test, skipping PR creation');
+              return;
+            }
+            
+            // Check if a promotion PR already exists
+            const { data: existingPRs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:dev`,
+              base: 'test'
+            });
+            
+            if (existingPRs.length > 0) {
+              core.info(`PR already exists: #${existingPRs[0].number}`);
+              return;
+            }
+            
+            // Create promotion PR
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚀 Promote dev to test',
+              head: 'dev',
+              base: 'test',
+              body: `## Automated Branch Promotion
+              
+              This PR promotes changes from \`dev\` to \`test\` branch.
+              
+              **Changes**: ${comparison.ahead_by} commits
+              
+              ### Commits
+              ${comparison.commits.map(c => `- ${c.commit.message.split('\n')[0]} (@${c.author?.login || 'unknown'})`).join('\n')}
+              
+              ---
+              🤖 _This PR was automatically created by the branch promotion workflow_
+              `
+            });
+            
+            core.info(`Created PR #${pr.number}: dev → test`);
+      
+      - name: Promote test to main
+        if: steps.promotion.outputs.type == 'test-to-main' || steps.promotion.outputs.type == 'full-promotion'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Check if there are changes between test and main
+            const { data: comparison } = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: 'main',
+              head: 'test'
+            });
+            
+            if (comparison.ahead_by === 0) {
+              core.info('No changes between test and main, skipping PR creation');
+              return;
+            }
+            
+            // Check if a promotion PR already exists
+            const { data: existingPRs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:test`,
+              base: 'main'
+            });
+            
+            if (existingPRs.length > 0) {
+              core.info(`PR already exists: #${existingPRs[0].number}`);
+              return;
+            }
+            
+            // Create promotion PR
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚀 Promote test to main (Production Release)',
+              head: 'test',
+              base: 'main',
+              body: `## Automated Branch Promotion to Production
+              
+              This PR promotes changes from \`test\` to \`main\` branch for production release.
+              
+              **Changes**: ${comparison.ahead_by} commits
+              
+              ### Commits
+              ${comparison.commits.map(c => `- ${c.commit.message.split('\n')[0]} (@${c.author?.login || 'unknown'})`).join('\n')}
+              
+              ⚠️ **Note**: This will trigger a production release upon merge.
+              
+              ---
+              🤖 _This PR was automatically created by the branch promotion workflow_
+              `
+            });
+            
+            core.info(`Created PR #${pr.number}: test → main`);
+      
+      - name: Summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const promotionType = '${{ steps.promotion.outputs.type }}';
+            
+            const summary = `
+            ## 🚀 Branch Promotion Summary
+            
+            - **Promotion Type**: ${promotionType}
+            - **Triggered By**: ${{ github.event_name }}
+            - **Status**: ✅ Completed
+            
+            Check the pull requests tab for any newly created promotion PRs.
+            `;
+            
+            await core.summary
+              .addRaw(summary)
+              .write();

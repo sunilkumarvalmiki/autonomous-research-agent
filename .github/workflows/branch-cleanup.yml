@@ -1,0 +1,98 @@
+name: Branch Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+      - test
+      - dev
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  cleanup:
+    name: Auto-delete merged branches
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Delete merged branch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branchName = context.payload.pull_request.head.ref;
+            const protectedBranches = ['main', 'test', 'dev'];
+            
+            // Skip if it's a protected branch
+            if (protectedBranches.includes(branchName)) {
+              core.info(`Branch '${branchName}' is protected and will not be deleted`);
+              return;
+            }
+            
+            try {
+              // Delete the branch
+              await github.rest.git.deleteRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `heads/${branchName}`
+              });
+              
+              core.info(`Successfully deleted branch: ${branchName}`);
+              
+              // Close any other open PRs from this branch
+              const { data: openPRs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                head: `${context.repo.owner}:${branchName}`
+              });
+              
+              for (const pr of openPRs) {
+                await github.rest.pulls.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  state: 'closed'
+                });
+                
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: `🤖 Auto-closing this PR because branch \`${branchName}\` was merged in #${context.payload.pull_request.number}`
+                });
+                
+                core.info(`Closed PR #${pr.number}`);
+              }
+              
+            } catch (error) {
+              // Branch might already be deleted or doesn't exist
+              core.warning(`Could not delete branch '${branchName}': ${error.message}`);
+            }
+      
+      - name: Cleanup summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branchName = context.payload.pull_request.head.ref;
+            const prNumber = context.payload.pull_request.number;
+            const baseBranch = context.payload.pull_request.base.ref;
+            
+            const summary = `
+            ## 🧹 Branch Cleanup Summary
+            
+            - **Merged PR**: #${prNumber}
+            - **Branch deleted**: \`${branchName}\`
+            - **Merged into**: \`${baseBranch}\`
+            - **Status**: ✅ Cleanup completed
+            `;
+            
+            await core.summary
+              .addRaw(summary)
+              .write();
