@@ -6,6 +6,7 @@ Supports Markdown, JSON, HTML, BibTeX, CSV, and Mermaid diagrams.
 import json
 import csv
 import io
+import re
 import logging
 from typing import Dict, List, Any
 from datetime import datetime
@@ -295,7 +296,6 @@ class BibTeXFormatter:
     
     def format(self, query: str, data: Dict[str, List[Dict[str, Any]]], analysis: Dict[str, Any]) -> str:
         """Generate BibTeX file."""
-        import re
         entries = []
         
         for i, paper in enumerate(data.get('papers', []), 1):
