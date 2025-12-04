@@ -293,21 +293,30 @@ class DataScraper:
         self.reddit = RedditScraper()
         self.devto = DevToScraper()
         self.rss = RSSFeedScraper()
+        # Import web search module
+        try:
+            from web_search import create_web_searcher
+            self.web_search = create_web_searcher()
+            logger.info("Web search enabled")
+        except ImportError:
+            self.web_search = None
+            logger.warning("Web search module not available")
     
     def scrape_all(self, query: str, focus: str = "all", time_range: str = "month", depth: str = "standard") -> Dict[str, List[Dict[str, Any]]]:
-        """Scrape all configured data sources."""
+        """Scrape all configured data sources including web search."""
         results = {
             'papers': [],
             'repositories': [],
             'news': [],
-            'discussions': []
+            'discussions': [],
+            'web_results': []  # New: web search results
         }
         
         # Adjust limits based on depth
         limits = {
-            'quick': {'papers': 20, 'repos': 15, 'news': 10},
-            'standard': {'papers': 50, 'repos': 30, 'news': 20},
-            'deep': {'papers': 100, 'repos': 50, 'news': 40}
+            'quick': {'papers': 20, 'repos': 15, 'news': 10, 'web': 5},
+            'standard': {'papers': 50, 'repos': 30, 'news': 20, 'web': 15},
+            'deep': {'papers': 100, 'repos': 50, 'news': 40, 'web': 30}
         }
         
         limit = limits.get(depth, limits['standard'])
@@ -318,11 +327,41 @@ class DataScraper:
         
         if focus in ['tools', 'all']:
             results['repositories'] = self.github.search_repositories(query, max_results=limit['repos'], time_range=time_range)
+            # Web search for tools
+            if self.web_search and depth in ['standard', 'deep']:
+                try:
+                    tool_results = self.web_search.search_tools(query, time_range=time_range)
+                    results['web_results'].extend(tool_results[:limit['web'] // 2])
+                except Exception as e:
+                    logger.warning(f"Web tool search failed: {e}")
         
         if focus in ['trends', 'all']:
             results['news'].extend(self.hackernews.get_top_stories(query, max_results=limit['news'] // 3))
             results['news'].extend(self.devto.search(query, max_results=limit['news'] // 3))
             results['news'].extend(self.rss.scrape(query, max_results=limit['news'] // 3))
             results['discussions'] = self.reddit.search(query, max_results=limit['news'])
+            # Web search for trends
+            if self.web_search and depth in ['standard', 'deep']:
+                try:
+                    trend_results = self.web_search.search_trends(query, time_range=time_range)
+                    results['web_results'].extend(trend_results[:limit['web'] // 2])
+                except Exception as e:
+                    logger.warning(f"Web trend search failed: {e}")
+        
+        # General web search for comprehensive research
+        if self.web_search and depth == 'deep':
+            try:
+                general_results = self.web_search.search(query, max_results=limit['web'], time_range=time_range)
+                results['web_results'].extend(general_results)
+                # Deduplicate web results by URL
+                seen_urls = set()
+                unique_web_results = []
+                for result in results['web_results']:
+                    if result['url'] not in seen_urls:
+                        seen_urls.add(result['url'])
+                        unique_web_results.append(result)
+                results['web_results'] = unique_web_results
+            except Exception as e:
+                logger.warning(f"General web search failed: {e}")
         
         return results
