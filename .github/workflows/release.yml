@@ -21,13 +21,17 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Get version from setup.py
+      - name: Get version from setup.py or pyproject.toml
         id: version
         run: |
-          VERSION=$(python -c "import setup; print(setup.__dict__.get('version', '0.1.0'))" 2>/dev/null || echo "0.1.0")
+          # Try to get version from setup.py first
+          VERSION=$(grep -Po '(?<=version=")[^"]*' setup.py 2>/dev/null | head -1 || echo "")
+          
+          # If not found, try pyproject.toml
           if [ -z "$VERSION" ]; then
-            VERSION=$(grep -Po '(?<=version=")[^"]*' setup.py | head -1)
+            VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml 2>/dev/null | head -1 || echo "0.1.0")
           fi
+          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
       
