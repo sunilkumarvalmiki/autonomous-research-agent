@@ -5,17 +5,24 @@ This demonstrates that the agent can be initialized and used.
 
 This demo runs without requiring Ollama or sentence-transformers to be installed,
 showing the agent's structure and capabilities.
+
+Note: For best results, install the package first:
+    pip install -e .
 """
 
 import sys
 from pathlib import Path
 
-# Add src to path
-src_path = Path(__file__).parent / 'src'
-sys.path.insert(0, str(src_path))
-
-from autonomous_agent.config import Config, set_config
-from autonomous_agent import ResearchAgent
+# Try to import, if fails add src to path for development mode
+try:
+    from autonomous_agent.config import Config, set_config
+    from autonomous_agent import ResearchAgent
+except ModuleNotFoundError:
+    # Development mode: add src to path
+    src_path = Path(__file__).parent / 'src'
+    sys.path.insert(0, str(src_path))
+    from autonomous_agent.config import Config, set_config
+    from autonomous_agent import ResearchAgent
 
 
 def demo_agent_initialization():
