@@ -222,7 +222,8 @@ Answer:"""
             return {
                 "total_interactions": 0,
                 "average_rating": 0,
-                "knowledge_base_documents": self._get_kb_count()
+                "knowledge_base_documents": self._get_kb_count(),
+                "loaded_models": self.model_manager.list_loaded_models()
             }
         
         ratings = [f["rating"] for f in self.feedback_history]
