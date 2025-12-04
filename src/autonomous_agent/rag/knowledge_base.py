@@ -294,11 +294,21 @@ class KnowledgeBase:
     
     def clear(self) -> None:
         """Clear all documents from the knowledge base."""
-        if self.config.vector_db_type == "chromadb":
-            self.vector_store.delete()
-            self._initialize_chromadb()
-        elif self.config.vector_db_type == "faiss":
-            self._initialize_faiss()
-            self.documents = []
-        
-        logger.info("Knowledge base cleared")
+        try:
+            if self.config.vector_db_type == "chromadb":
+                # ChromaDB: delete the collection and recreate it
+                import chromadb
+                client = chromadb.PersistentClient(path=self.config.vector_db_path)
+                try:
+                    client.delete_collection(name="knowledge_base")
+                except Exception:
+                    pass  # Collection might not exist
+                self._initialize_chromadb()
+            elif self.config.vector_db_type == "faiss":
+                self._initialize_faiss()
+                self.documents = []
+            
+            logger.info("Knowledge base cleared")
+        except Exception as e:
+            logger.error(f"Error clearing knowledge base: {e}")
+            raise

@@ -128,7 +128,16 @@ async def research(request: ResearchRequest):
             use_rag=request.use_rag,
             model_name=request.model_name
         )
-        return ResearchResponse(**result)
+        # Ensure all required fields are present
+        response_data = {
+            "query": result["query"],
+            "response": result["response"],
+            "model": result["model"],
+            "context_used": result.get("context_used", False),
+            "retrieved_documents": result.get("retrieved_documents", 0),
+            "timestamp": result["timestamp"]
+        }
+        return ResearchResponse(**response_data)
     
     except Exception as e:
         logger.error(f"Error in research: {e}")

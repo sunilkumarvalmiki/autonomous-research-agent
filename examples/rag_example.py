@@ -7,9 +7,6 @@ import sys
 import logging
 from pathlib import Path
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
-
 from autonomous_agent import ResearchAgent
 from autonomous_agent.utils.text_utils import chunk_text
 

@@ -4,9 +4,12 @@ import unittest
 import tempfile
 import os
 from pathlib import Path
-
 import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+
+# Add src to path for direct test execution (when not installed via pip)
+_src_path = str(Path(__file__).parent.parent / 'src')
+if _src_path not in sys.path:
+    sys.path.insert(0, _src_path)
 
 from autonomous_agent.config import Config, ModelConfig, RAGConfig, AgentConfig
 
