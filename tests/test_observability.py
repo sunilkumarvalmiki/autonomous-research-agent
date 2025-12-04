@@ -4,7 +4,6 @@ Tests metrics tracking, tracing, and monitoring.
 """
 
 import pytest
-from unittest.mock import Mock
 import sys
 import os
 import time

@@ -198,9 +198,10 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Run Bandit security scan
+      continue-on-error: true
       run: |
         pip install bandit
-        bandit -r src/ -ll || true
+        bandit -r src/ -ll
     
     - name: Check for secrets
       uses: trufflesecurity/trufflehog@main
@@ -210,9 +211,10 @@ jobs:
         head: HEAD
     
     - name: Dependency vulnerability scan
+      continue-on-error: true
       run: |
         pip install safety
-        safety check --json || true
+        safety check --json
 
   uat-tests:
     name: User Acceptance Tests

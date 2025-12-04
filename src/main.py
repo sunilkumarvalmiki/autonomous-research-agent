@@ -2,7 +2,6 @@
 Main orchestrator for the autonomous research agent with production-grade enhancements.
 """
 
-import os
 import sys
 import logging
 import yaml

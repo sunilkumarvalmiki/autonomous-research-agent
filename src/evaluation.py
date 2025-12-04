@@ -5,7 +5,6 @@ Implements various metrics and scoring methods.
 
 import logging
 from typing import Dict, Any, List, Tuple
-import re
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -132,6 +131,7 @@ class ResearchEvaluator:
         
         # Check depth of key findings
         key_findings = analysis.get('key_findings', [])
+        avg_finding_length = 0
         if key_findings:
             avg_finding_length = sum(len(str(f)) for f in key_findings) / len(key_findings)
             depth_score = min(avg_finding_length / 100, 1.0)  # Expect ~100 chars per finding
@@ -205,7 +205,7 @@ class ResearchEvaluator:
                 import json
                 json.loads(outputs['json'])
                 format_quality['json'] = 1.0
-            except:
+            except Exception:
                 format_quality['json'] = 0.0
         
         # HTML should have basic structure

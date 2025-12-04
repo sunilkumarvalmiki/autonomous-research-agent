@@ -295,15 +295,19 @@ class BibTeXFormatter:
     
     def format(self, query: str, data: Dict[str, List[Dict[str, Any]]], analysis: Dict[str, Any]) -> str:
         """Generate BibTeX file."""
+        import re
         entries = []
         
         for i, paper in enumerate(data.get('papers', []), 1):
             # Extract arXiv ID from link with validation
             link = paper.get('link', '')
-            if link and '/' in link:
-                arxiv_id = link.split('/')[-1]
-            else:
-                arxiv_id = f"unknown{i}"
+            arxiv_id = f"unknown{i}"  # Default value
+            if link:
+                # Extract ID from various arXiv URL formats
+                # http://arxiv.org/abs/1234.5678 or https://arxiv.org/abs/1234.5678v2
+                match = re.search(r'arxiv.org/abs/(\d+\.\d+)', link)
+                if match:
+                    arxiv_id = match.group(1)
             
             entry = f"""@article{{{arxiv_id},
     title = {{{paper.get('title', 'Unknown')}}},

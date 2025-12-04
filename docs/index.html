@@ -294,7 +294,7 @@ time_range: month
 <span class="comment"># 4. Agent runs automatically and posts results! ✨</span>
                 </div>
                 
-                <a href="https://github.com/sunilkumarvalmiki/autonomous-research-agent" class="cta-button">View on GitHub</a>
+                <a id="cta-button" href="#" class="cta-button">View on GitHub</a>
             </div>
             
             <div style="margin-top: 50px;">
@@ -333,10 +333,26 @@ time_range: month
         <div class="footer">
             <p>Built with ❤️ using Python, GitHub Actions, and Free LLM APIs</p>
             <p style="margin-top: 10px;">
-                <a href="https://github.com/sunilkumarvalmiki/autonomous-research-agent">GitHub</a> • 
-                <a href="https://github.com/sunilkumarvalmiki/autonomous-research-agent/issues/new?labels=research">Try It Now</a>
+                <a id="github-link" href="#">GitHub</a> • 
+                <a id="github-issue-link" href="#">Try It Now</a>
             </p>
         </div>
     </div>
+    <script>
+        // Dynamically set GitHub links based on query params (with defaults)
+        (function() {
+            function getQueryParam(name, defaultValue) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(name) || defaultValue;
+            }
+            var owner = getQueryParam('owner', 'sunilkumarvalmiki');
+            var repo = getQueryParam('repo', 'autonomous-research-agent');
+            var githubUrl = 'https://github.com/' + owner + '/' + repo;
+            var issueUrl = githubUrl + '/issues/new?labels=research';
+            document.getElementById('github-link').setAttribute('href', githubUrl);
+            document.getElementById('github-issue-link').setAttribute('href', issueUrl);
+            document.getElementById('cta-button').setAttribute('href', githubUrl);
+        })();
+    </script>
 </body>
 </html>

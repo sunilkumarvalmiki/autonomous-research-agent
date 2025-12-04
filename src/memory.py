@@ -207,8 +207,9 @@ class CacheManager:
                     expired_count += 1
                 else:
                     valid_count += 1
-            except:
-                pass
+            except (OSError, json.JSONDecodeError, KeyError) as e:
+                # Ignore files that cannot be read or parsed; they are not counted as valid/expired.
+                logger.warning(f"Skipping cache file '{file_path}' due to error: {e}")
         
         return {
             'total_files': len(cache_files),

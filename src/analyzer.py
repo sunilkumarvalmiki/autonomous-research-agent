@@ -127,7 +127,7 @@ Format your response as JSON with these sections."""
             # Try to parse as JSON, otherwise return as text
             try:
                 analysis = json.loads(content)
-            except:
+            except json.JSONDecodeError:
                 analysis = {
                     "key_findings": [],
                     "trends": content,
