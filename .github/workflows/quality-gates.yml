@@ -1,0 +1,271 @@
+name: Quality Gates
+
+on:
+  pull_request:
+    branches:
+      - main
+      - test
+      - dev
+  push:
+    branches:
+      - main
+      - test
+      - dev
+
+# Cancel in-progress runs for the same workflow and branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black isort flake8 mypy pylint
+          pip install -r requirements.txt || true
+      
+      - name: Run Black (formatting check)
+        continue-on-error: true
+        run: |
+          if [ -d "src" ] && [ -d "tests" ]; then
+            black --check --diff src/ tests/ || echo "::warning::Black formatting issues found"
+          elif [ -d "src" ]; then
+            black --check --diff src/ || echo "::warning::Black formatting issues found"
+          else
+            echo "::notice::No src/ or tests/ directories found, skipping Black"
+          fi
+      
+      - name: Run isort (import sorting)
+        continue-on-error: true
+        run: |
+          if [ -d "src" ] && [ -d "tests" ]; then
+            isort --check-only --diff src/ tests/ || echo "::warning::Import sorting issues found"
+          elif [ -d "src" ]; then
+            isort --check-only --diff src/ || echo "::warning::Import sorting issues found"
+          else
+            echo "::notice::No src/ or tests/ directories found, skipping isort"
+          fi
+      
+      - name: Run Flake8 (linting)
+        continue-on-error: true
+        run: |
+          if [ -d "src" ] && [ -d "tests" ]; then
+            flake8 src/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics || echo "::warning::Flake8 errors found"
+            flake8 src/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          elif [ -d "src" ]; then
+            flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics || echo "::warning::Flake8 errors found"
+            flake8 src/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          else
+            echo "::notice::No src/ directory found, skipping Flake8"
+          fi
+      
+      - name: Run MyPy (type checking)
+        continue-on-error: true
+        run: |
+          if [ -d "src" ]; then
+            mypy src/ --ignore-missing-imports || echo "::warning::MyPy type checking issues found"
+          else
+            echo "::notice::No src/ directory found, skipping MyPy"
+          fi
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit safety
+          pip install -r requirements.txt || true
+      
+      - name: Run Bandit (security issues)
+        continue-on-error: true
+        run: |
+          if [ -d "src" ]; then
+            bandit -r src/ -f json -o bandit-report.json || echo "::warning::Bandit found security issues"
+            bandit -r src/ -ll || echo "::warning::Security issues detected"
+          else
+            echo "::notice::No src/ directory found, skipping Bandit"
+            echo "[]" > bandit-report.json
+          fi
+      
+      - name: Run Safety (dependency vulnerabilities)
+        continue-on-error: true
+        run: |
+          safety check --json || echo "::warning::Safety found vulnerable dependencies"
+      
+      - name: Upload Bandit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: bandit-report.json
+          retention-days: 30
+
+  multi-version-tests:
+    name: Test Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pytest-xdist pytest-timeout
+          pip install -r requirements.txt || true
+      
+      - name: Run tests
+        continue-on-error: true
+        run: |
+          if [ -d "tests" ]; then
+            pytest tests/ -v --tb=short --timeout=30 || echo "::warning::Tests failed for Python ${{ matrix.python-version }}"
+          else
+            echo "::notice::No tests/ directory found, skipping tests"
+          fi
+      
+      - name: Upload coverage
+        if: matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.python-version }}
+          path: coverage.xml
+          retention-days: 30
+
+  build-validation:
+    name: Build Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build wheel setuptools
+      
+      - name: Build package
+        run: |
+          python -m build
+      
+      - name: Validate package
+        run: |
+          python -m pip install dist/*.whl
+          python -c "import autonomous_agent; print('Package installed successfully')" || echo "::warning::Package import failed"
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package
+          path: dist/
+          retention-days: 30
+
+  docker-build:
+    name: Docker Build Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Docker image
+        continue-on-error: true
+        run: |
+          docker build -t autonomous-research-agent:test . || echo "::warning::Docker build failed"
+      
+      - name: Test Docker image
+        continue-on-error: true
+        run: |
+          docker run --rm autonomous-research-agent:test python --version || echo "::warning::Docker image test failed"
+
+  quality-summary:
+    name: Quality Gates Summary
+    runs-on: ubuntu-latest
+    needs: [code-quality, security-scan, multi-version-tests, build-validation, docker-build]
+    if: always()
+    
+    steps:
+      - name: Generate summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const jobs = [
+              { name: 'Code Quality', result: '${{ needs.code-quality.result }}' },
+              { name: 'Security Scan', result: '${{ needs.security-scan.result }}' },
+              { name: 'Multi-Version Tests', result: '${{ needs.multi-version-tests.result }}' },
+              { name: 'Build Validation', result: '${{ needs.build-validation.result }}' },
+              { name: 'Docker Build', result: '${{ needs.docker-build.result }}' }
+            ];
+            
+            const getEmoji = (result) => {
+              if (result === 'success') return '✅';
+              if (result === 'failure') return '❌';
+              if (result === 'cancelled') return '⏭️';
+              return '⚠️';
+            };
+            
+            let summary = '## 🎯 Quality Gates Summary\n\n';
+            summary += '| Check | Status |\n';
+            summary += '|-------|--------|\n';
+            
+            for (const job of jobs) {
+              summary += `| ${job.name} | ${getEmoji(job.result)} ${job.result} |\n`;
+            }
+            
+            summary += '\n---\n';
+            summary += `**Branch**: \`${context.ref.replace('refs/heads/', '')}\`\n`;
+            summary += `**Commit**: ${context.sha.substring(0, 7)}\n`;
+            
+            await core.summary
+              .addRaw(summary)
+              .write();

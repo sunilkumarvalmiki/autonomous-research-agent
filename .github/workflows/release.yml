@@ -1,0 +1,184 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get version from setup.py or pyproject.toml
+        id: version
+        run: |
+          # Try to get version from setup.py first
+          VERSION=$(grep -Po '(?<=version=")[^"]*' setup.py 2>/dev/null | head -1 || echo "")
+          
+          # If not found, try pyproject.toml
+          if [ -z "$VERSION" ]; then
+            VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml 2>/dev/null | head -1 || echo "0.1.0")
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Generate release notes
+        if: steps.check_tag.outputs.exists == 'false'
+        id: release_notes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Get the latest release
+            let previousTag = '';
+            try {
+              const { data: latestRelease } = await github.rest.repos.getLatestRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo
+              });
+              previousTag = latestRelease.tag_name;
+            } catch (error) {
+              // No previous release exists
+              core.info('No previous release found');
+            }
+            
+            // Get commits since last release or all commits
+            const commits = previousTag 
+              ? await github.rest.repos.compareCommits({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  base: previousTag,
+                  head: context.sha
+                })
+              : await github.rest.repos.listCommits({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  sha: context.sha,
+                  per_page: 50
+                });
+            
+            const commitList = commits.data.commits || commits.data;
+            
+            // Categorize commits
+            const features = [];
+            const fixes = [];
+            const chores = [];
+            const others = [];
+            
+            for (const commit of commitList) {
+              const message = commit.commit.message.split('\n')[0];
+              if (message.startsWith('feat:') || message.startsWith('feature:')) {
+                features.push(message);
+              } else if (message.startsWith('fix:')) {
+                fixes.push(message);
+              } else if (message.startsWith('chore:')) {
+                chores.push(message);
+              } else {
+                others.push(message);
+              }
+            }
+            
+            // Build release notes
+            let notes = '## What\'s Changed\n\n';
+            
+            if (features.length > 0) {
+              notes += '### 🚀 Features\n';
+              features.forEach(f => notes += `- ${f}\n`);
+              notes += '\n';
+            }
+            
+            if (fixes.length > 0) {
+              notes += '### 🐛 Bug Fixes\n';
+              fixes.forEach(f => notes += `- ${f}\n`);
+              notes += '\n';
+            }
+            
+            if (chores.length > 0) {
+              notes += '### 🔧 Maintenance\n';
+              chores.forEach(c => notes += `- ${c}\n`);
+              notes += '\n';
+            }
+            
+            if (others.length > 0) {
+              notes += '### 📝 Other Changes\n';
+              others.slice(0, 10).forEach(o => notes += `- ${o}\n`);
+              if (others.length > 10) {
+                notes += `- ... and ${others.length - 10} more commits\n`;
+              }
+              notes += '\n';
+            }
+            
+            notes += `\n**Full Changelog**: https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${previousTag}...v${{ steps.version.outputs.version }}`;
+            
+            return notes;
+      
+      - name: Create Release
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = '${{ steps.version.outputs.tag }}';
+            const version = '${{ steps.version.outputs.version }}';
+            const releaseNotes = ${{ steps.release_notes.outputs.result }};
+            
+            // Create tag
+            await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${tag}`,
+              sha: context.sha
+            });
+            
+            core.info(`Created tag: ${tag}`);
+            
+            // Create release
+            const { data: release } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              name: `Release ${version}`,
+              body: releaseNotes,
+              draft: false,
+              prerelease: false
+            });
+            
+            core.info(`Created release: ${release.html_url}`);
+      
+      - name: Release summary
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          echo "## 🎉 Release Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag**: ${{ steps.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${GITHUB_SHA:0:7}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View the release at: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Skip summary
+        if: steps.check_tag.outputs.exists == 'true'
+        run: |
+          echo "## ⏭️ Release Skipped" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Release tag ${{ steps.version.outputs.tag }} already exists." >> $GITHUB_STEP_SUMMARY
