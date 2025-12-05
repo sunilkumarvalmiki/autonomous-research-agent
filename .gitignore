@@ -124,6 +124,13 @@ dmypy.json
 
 # Data directories
 data/
+# Allow research reports and documentation
+!data/research/
+!data/research/reports/
+!data/research/reports/*.md
+!data/research/reports/*.json
+!data/research/*.md
+!data/.gitignore
 *.db
 *.sqlite
 
