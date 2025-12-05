@@ -1,0 +1,81 @@
+============================================================
+Autonomous Research Agent - Demo
+============================================================
+
+1. Loading configuration...
+   ✓ Configuration loaded
+   ✓ RAG enabled: False
+   ✓ Self-improvement enabled: True
+
+2. Initializing ResearchAgent...
+   ✓ Agent initialized successfully
+   ✓ Default model: llama
+
+3. Available models:
+   - llama: llama-3.1-8b (ollama)
+   - mistral: mistral-7b (ollama)
+   - phi: phi-3 (ollama)
+
+4. Model selection capabilities:
+   The agent automatically selects the best model based on task type:
+   - code         → llama
+   - reasoning    → llama
+   - general      → mistral
+   - fast         → phi
+   - creative     → mistral
+
+5. Agent capabilities:
+   ✓ Single-step research queries
+   ✓ Multi-step reasoning (breaks complex queries into sub-questions)
+   ✓ Automatic model selection based on task type
+   ✓ Feedback collection for self-improvement
+   ✓ Statistics tracking
+   ✓ RAG integration (when enabled with required dependencies)
+   ✓ CLI interface for command-line usage
+   ✓ Python API for programmatic access
+
+6. Current statistics:
+   - Total interactions: 0
+   - Average rating: 0
+   - Knowledge base documents: 0
+   - Loaded models: 0 (loaded on-demand)
+
+7. Example usage:
+   Python API:
+   ```python
+   from autonomous_agent import ResearchAgent
+   agent = ResearchAgent()
+   result = agent.research('What is quantum computing?')
+   print(result['response'])
+   ```
+
+   CLI:
+   ```bash
+   autonomous-agent research 'What is quantum computing?'
+   autonomous-agent stats
+   autonomous-agent config --show
+   ```
+
+============================================================
+✅ Agent Setup Complete!
+============================================================
+
+📝 To run the agent with actual model inference:
+
+   Option 1: Using Ollama (Recommended - Easy Setup)
+   1. Install Ollama from https://ollama.ai/
+   2. Start Ollama service: ollama serve
+   3. Pull a model: ollama pull llama3.1:8b
+   4. Run example: python examples/simple_research.py
+
+   Option 2: Using Local Models (Requires GPU)
+   1. Install dependencies: pip install -r requirements.txt
+   2. Configure local model in config.json
+   3. Run with custom config
+
+📦 Installation:
+   pip install -e .
+
+🚀 The autonomous research agent is ready to run!
+============================================================
+

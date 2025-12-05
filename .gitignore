@@ -131,12 +131,15 @@ data/
 *.faiss
 *.index
 
-# Model files
-models/
+# Model files (downloaded models, not source code)
+data/models/
 *.bin
 *.safetensors
 *.gguf
 *.ggml
+
+# But allow src/autonomous_agent/models/ (source code)
+!src/autonomous_agent/models/
 
 # Feedback and logs
 feedback/
