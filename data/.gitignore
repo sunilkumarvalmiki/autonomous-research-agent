@@ -1,0 +1,64 @@
+# Data directory .gitignore
+
+# Ignore large datasets (use Git LFS for files > 50MB)
+*.csv
+*.parquet
+*.arrow
+*.feather
+*.h5
+*.hdf5
+
+# Ignore model files
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.gguf
+*.ggml
+
+# Ignore cache and temporary files
+cache/*
+*.cache
+*.tmp
+*.temp
+__pycache__/
+*.pyc
+
+# Ignore large compressed files (use Git LFS)
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+
+# Ignore database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Ignore vector database files
+chroma.db/
+faiss_index/
+*.faiss
+
+# Keep README and metadata files
+!README.md
+!*.json
+!*.yaml
+!*.yml
+
+# Keep research reports (markdown)
+!reports/*.md
+!reports/*.json
+
+# Ignore experimental outputs except summaries
+experiments/*/raw_data/
+experiments/*/checkpoints/
+
+# Ignore personal/sensitive data
+*_private/
+*_confidential/
+*.key
+*.pem
+*.env

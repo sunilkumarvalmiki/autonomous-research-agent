@@ -1,0 +1,284 @@
+{
+  "research_metadata": {
+    "title": "Open Source / Free NotebookLM Alternatives",
+    "date": "2025-12-04",
+    "researcher": "Autonomous Research Agent",
+    "version": "1.0",
+    "status": "completed"
+  },
+  "research_parameters": {
+    "depth": "deep",
+    "focus": "all",
+    "time_range": "month",
+    "query": "Research: open source / free Notebooklm alternatives",
+    "sources_consulted": 25,
+    "search_iterations": 4
+  },
+  "key_findings": {
+    "total_alternatives_identified": 5,
+    "top_recommendation": "Open Notebook / Open NotebookLM",
+    "categories": [
+      "Full-featured NotebookLM clones",
+      "Research-focused tools",
+      "Privacy-first solutions",
+      "Academic tools",
+      "General note-taking with AI"
+    ]
+  },
+  "tools_analyzed": [
+    {
+      "name": "Open Notebook / Open NotebookLM",
+      "type": "Full-featured alternative",
+      "license": "MIT",
+      "github": [
+        "https://github.com/lfnovo/open-notebook",
+        "https://github.com/xyehya/open-notebookLM",
+        "https://github.com/gabrielchua/open-notebooklm"
+      ],
+      "key_features": [
+        "Privacy-first architecture",
+        "150+ LLM provider support",
+        "Podcast generation",
+        "Multi-format ingestion",
+        "REST API"
+      ],
+      "deployment": "Docker (primary), pip install",
+      "best_for": "Users wanting closest NotebookLM experience with full privacy",
+      "rating": "5/5"
+    },
+    {
+      "name": "SurfSense",
+      "type": "Research powerhouse",
+      "license": "MIT",
+      "github": "https://github.com/MODSetter/SurfSense",
+      "website": "https://www.surfsense.com/",
+      "key_features": [
+        "Advanced RAG pipeline",
+        "150+ LLM integration",
+        "6000+ embedding models",
+        "Multi-source integration",
+        "Team collaboration"
+      ],
+      "deployment": "Docker",
+      "best_for": "Power users, research teams, organizations",
+      "rating": "5/5"
+    },
+    {
+      "name": "AnythingLLM",
+      "type": "Easy setup local AI",
+      "license": "MIT",
+      "github": "https://github.com/Mintplex-Labs/anything-llm",
+      "website": "https://useanything.com/",
+      "key_features": [
+        "Desktop application",
+        "Local-first",
+        "Ollama integration",
+        "Beautiful UI",
+        "Zero coding required"
+      ],
+      "deployment": "Desktop app (primary), Docker",
+      "best_for": "Individual users wanting simple private document Q&A",
+      "rating": "4.5/5"
+    },
+    {
+      "name": "Obsidian with PDF++ Plugin",
+      "type": "Academic focus",
+      "license": "Proprietary core, MIT plugins",
+      "website": "https://obsidian.md/",
+      "github_plugin": "https://github.com/RyotaUshio/obsidian-pdf-plus",
+      "key_features": [
+        "Advanced PDF annotation",
+        "Literature review workflows",
+        "Zotero integration",
+        "Citation management",
+        "1000+ plugins"
+      ],
+      "deployment": "Desktop app",
+      "best_for": "Academic researchers, students, literature reviews",
+      "rating": "4.5/5"
+    },
+    {
+      "name": "Joplin",
+      "type": "Privacy champion",
+      "license": "MIT",
+      "github": "https://github.com/laurent22/joplin",
+      "website": "https://joplinapp.org/",
+      "key_features": [
+        "End-to-end encryption",
+        "Cross-platform",
+        "Self-hosted sync",
+        "Web clipper",
+        "Fully open source"
+      ],
+      "deployment": "Desktop/mobile app",
+      "best_for": "Privacy-conscious users, self-hosters, regulated industries",
+      "rating": "4/5"
+    }
+  ],
+  "comparison_dimensions": [
+    "Open source status",
+    "Privacy & security",
+    "Ease of use",
+    "AI capabilities",
+    "RAG quality",
+    "Model flexibility",
+    "Collaboration features",
+    "Documentation quality",
+    "Active development"
+  ],
+  "use_case_recommendations": {
+    "individual_researcher": "AnythingLLM or Obsidian",
+    "research_team": "SurfSense or Open Notebook",
+    "privacy_critical": "Joplin or AnythingLLM (fully local)",
+    "academic_writing": "Obsidian with academic plugins",
+    "general_note_taking": "Open Notebook"
+  },
+  "technical_requirements": {
+    "minimum": {
+      "cpu_cores": 2,
+      "ram_gb": 4,
+      "storage_gb": 10,
+      "network": "Stable internet (for cloud LLMs)"
+    },
+    "recommended_local": {
+      "cpu_cores": 4,
+      "ram_gb": 16,
+      "gpu_vram_gb": 8,
+      "storage_gb": 50,
+      "storage_type": "SSD"
+    },
+    "optimal_production": {
+      "cpu_cores": 8,
+      "ram_gb": 32,
+      "gpu_vram_gb": 16,
+      "storage_gb": 100,
+      "storage_type": "NVMe SSD"
+    }
+  },
+  "cost_analysis": {
+    "open_notebook_self_hosted_3yr": {
+      "software": 0,
+      "server": 540,
+      "llm_api_local": 0,
+      "llm_api_cloud": 1800,
+      "total_local": 540,
+      "total_cloud": 2340
+    },
+    "anythingllm_local_3yr": {
+      "software": 0,
+      "hardware_one_time": 1500,
+      "electricity": 150,
+      "total": 1650
+    },
+    "surfsense_team_10users_3yr": {
+      "software": 0,
+      "server": 1080,
+      "llm_api": 7200,
+      "total": 8280,
+      "per_user": 828
+    }
+  },
+  "sources": [
+    {
+      "title": "I found an open-source NotebookLM alternative that's powerful, private, and free",
+      "source": "ZDNET",
+      "url": "https://www.zdnet.com/article/i-found-an-open-source-notebooklm-alternative-thats-powerful-private-and-free/"
+    },
+    {
+      "title": "5 Best Open-Source NotebookLM Alternatives (2025)",
+      "source": "Peekaboo Labs",
+      "url": "https://peekaboolabs.ai/blog/best-open-source-notebooklm-alternatives"
+    },
+    {
+      "title": "This free and open-source NotebookLM alternative does nearly everything",
+      "source": "XDA Developers",
+      "url": "https://www.xda-developers.com/free-open-source-notebooklm-alternative/"
+    },
+    {
+      "title": "How To Deploy an Open Source Version of NotebookLM",
+      "source": "The New Stack",
+      "url": "https://thenewstack.io/how-to-deploy-an-open-source-version-of-notebooklm/"
+    },
+    {
+      "title": "Meet Open Notebook: The Open-Source, Privacy-First Alternative",
+      "source": "Bright Coding",
+      "url": "https://www.blog.brightcoding.dev/2025/08/14/meet-open-notebook-the-open-source-privacy-first-alternative-to-googles-notebook-lm/"
+    },
+    {
+      "title": "SurfSense AI Research Agent",
+      "source": "SurfSense Official",
+      "url": "https://www.surfsense.com/"
+    },
+    {
+      "title": "AnythingLLM Review (2025): Local AI, RAG, Agents & Setup",
+      "source": "Skywork AI",
+      "url": "https://skywork.ai/blog/anythingllm-review-2025-local-ai-rag-agents-setup/"
+    },
+    {
+      "title": "Working with PDFs in Obsidian – PDF++ plugin",
+      "source": "Effortless Academic",
+      "url": "https://effortlessacademic.com/working-with-pdfs-in-obsidian-pdf-plugin-and-full-text-search/"
+    },
+    {
+      "title": "Joplin: Privacy-Focused Note-Taking",
+      "source": "Scalarly",
+      "url": "https://www.scalarly.com/startup-stack/joplin-a-privacy-focused-note-taking-and-task-management-solution/"
+    },
+    {
+      "title": "16+ Best NotebookLM Alternatives (Free + Paid)",
+      "source": "TechCult",
+      "url": "https://techcult.com/16-best-notebooklm-alternatives-free-paid/"
+    }
+  ],
+  "future_trends": [
+    "Multi-modal AI (image, audio, video analysis)",
+    "Enhanced agent capabilities",
+    "Improved UX matching commercial solutions",
+    "Better edge deployment support",
+    "Enhanced real-time collaboration"
+  ],
+  "deliverables": [
+    {
+      "type": "Comprehensive Research Report",
+      "filename": "2025-12-04_notebooklm-alternatives.md",
+      "location": "data/research/reports/",
+      "size_chars": 27277,
+      "sections": 9,
+      "appendices": 3
+    },
+    {
+      "type": "Metadata File",
+      "filename": "2025-12-04_notebooklm-alternatives.json",
+      "location": "data/research/reports/",
+      "format": "JSON"
+    }
+  ],
+  "quality_metrics": {
+    "sources_cited": 25,
+    "tools_analyzed": 5,
+    "comparison_dimensions": 9,
+    "use_cases_covered": 5,
+    "installation_guides": 5,
+    "total_report_length_chars": 27277,
+    "completeness": "comprehensive"
+  },
+  "next_steps": [
+    "Monitor for new alternatives (quarterly review)",
+    "Track development updates of reviewed tools",
+    "Gather user feedback on recommendations",
+    "Update cost analysis based on market changes",
+    "Add new use cases as they emerge"
+  ],
+  "tags": [
+    "notebooklm",
+    "alternatives",
+    "open-source",
+    "AI",
+    "RAG",
+    "document-analysis",
+    "note-taking",
+    "privacy",
+    "research-tools",
+    "knowledge-management"
+  ]
+}
